@@ -55,8 +55,8 @@ export default function App() {
   // --- 공유 처리 ---
   const shareInvitation = async () => {
     const shareUrl = window.location.href;
-    const title = `${weddingData.groom.name} ♥ ${weddingData.bride.name} 결혼식`;
-    const description = `${weddingData.date} ${weddingData.time} | ${weddingData.location}`;
+    const title = '승환♥경희의 결혼식에 초대합니다';
+    const description = title;
     const imageUrl = `${baseUrl}/images/og-image.jpg`;
 
     try {
