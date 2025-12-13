@@ -54,6 +54,7 @@ export default function App() {
   // --- 공유 처리 ---
   const shareInvitation = async () => {
     const shareUrl = window.location.href;
+    const title = '🎉승환♥경희의 결혼식에 초대합니다🎉';
     const imageUrl = `${baseUrl}/images/og-image.jpg`;
 
     try {
@@ -62,7 +63,7 @@ export default function App() {
         window.Kakao.Share.sendDefault({
           objectType: 'feed',
           content: {
-            title: '🎉승환♥경희의 결혼식에 초대합니다🎉',
+            title,
             imageUrl,
             link: {
               mobileWebUrl: shareUrl,
@@ -85,7 +86,7 @@ export default function App() {
 
       // 2) Web Share API 지원 시 (모바일 브라우저 등)
       if (navigator.share) {
-        await navigator.share({ title, text: description, url: shareUrl });
+        await navigator.share({ title, url: shareUrl });
         return;
       }
 
