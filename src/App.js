@@ -55,8 +55,8 @@ export default function App() {
   // --- 공유 처리 ---
   const shareInvitation = async () => {
     const shareUrl = window.location.href;
-    const title = '승환♥경희의 결혼식에 초대합니다';
-    const description = title;
+    const title = '🎉승환❤️경희의 결혼식에 초대💌합니다 🎉';
+    const description = '2026년 6월 6일 토요일 오후 1시\n천안 비렌티웨딩홀 베르테홀';
     const imageUrl = `${baseUrl}/images/og-image.jpg`;
 
     try {
