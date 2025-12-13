@@ -20,7 +20,7 @@ export default function App() {
   // --- 데이터 수정 ---
   const weddingData = {
     date: "2026년 6월 6일 토요일 오후 1시",
-    location: "천안 비렌티웨딩홀 3F 베르테홀",
+    location: "천안 비렌티웨딩홀",
     hall: "비렌티빌 3F 베르테홀",
     address: "충남 천안시 서북구 천안대로 1198-30",
     groom: {
@@ -290,6 +290,7 @@ export default function App() {
           <p>{weddingData.date}</p>
           <p className="mt-1">{weddingData.time}</p>
           <p className="mt-1">{weddingData.location}</p>
+          <p className="mt-1">{weddingData.hall}</p>
         </div>
       </div>
     </div>
