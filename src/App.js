@@ -41,10 +41,11 @@ export default function App() {
   };
 
   // --- 이미지 데이터 (썸네일/원본 동일 경로) ---
+  const baseUrl = process.env.PUBLIC_URL || '';
   const images = Array.from({ length: 17 }, (_, i) => ({
     id: i,
-    src: `/images/photo_${i + 1}.jpg`,
-    thumb: `/images/photo_${i + 1}.jpg`
+    src: `${baseUrl}/images/photo_${i + 1}.jpg`,
+    thumb: `${baseUrl}/images/photo_${i + 1}.jpg`
   }));
 
   // --- 지도 링크 처리 ---
@@ -152,9 +153,9 @@ export default function App() {
 
   const HeroSection = () => (
     <div className="relative w-full h-[600px] bg-stone-100 overflow-hidden">
-      {/* 수정됨: process.env 제거 */}
+      {/* GitHub Pages 호환: PUBLIC_URL 기준 경로 사용 */}
       <img 
-        src="/images/main.jpg" 
+        src={`${baseUrl}/images/main.jpg`} 
         alt="Main Wedding" 
         className="w-full h-full object-cover opacity-90"
         onError={(e) => {
@@ -286,9 +287,9 @@ export default function App() {
         <div className="text-stone-500 text-sm mb-6">{weddingData.address}</div>
         
         <div className="w-full min-h-[200px] bg-gray-200 mb-6 rounded flex items-center justify-center text-gray-400 overflow-hidden relative">
-           {/* 수정됨: process.env 제거 */}
+           {/* GitHub Pages 호환: PUBLIC_URL 기준 경로 사용 */}
            <img 
-             src="/images/map.jpg" 
+             src={`${baseUrl}/images/map.jpg`} 
              alt="약도" 
              className="w-full h-auto"
              onError={(e) => {
@@ -459,7 +460,7 @@ export default function App() {
     <div className="font-sans text-stone-800 bg-white min-h-screen pb-safe">
       <audio 
         ref={audioRef}
-        src="/audio/background-music.mp3"
+        src={`${baseUrl}/audio/background-music.mp3`}
         loop
         preload="auto"
       />
