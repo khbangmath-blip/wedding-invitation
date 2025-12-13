@@ -54,18 +54,15 @@ export default function App() {
   // --- 공유 처리 ---
   const shareInvitation = async () => {
     const shareUrl = window.location.href;
-    const title = '🎉승환❤️경희의 결혼식에 초대합니다 🎉';
-    const description = '🎉승환❤️경희의 결혼식에 초대합니다 🎉\n\n2026년 6월 6일 토 오후 1시\n천안 비렌티웨딩홀 베르테홀';
     const imageUrl = `${baseUrl}/images/og-image.jpg`;
 
     try {
-      // 1) Kakao SDK가 초기화되어 있으면 Kakao 공유 시도
+      // 1) Kakao SDK가 초기화되어 있으면 Kakao 공유 시도 (썸네일만 공유)
       if (window.Kakao && window.Kakao.isInitialized && window.Kakao.Share) {
         window.Kakao.Share.sendDefault({
           objectType: 'feed',
           content: {
-            title,
-            description,
+            title: '🎉승환♥경희의 결혼식에 초대합니다🎉',
             imageUrl,
             link: {
               mobileWebUrl: shareUrl,
