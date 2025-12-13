@@ -52,6 +52,55 @@ export default function App() {
     thumb: `${baseUrl}/images/photo_${i + 1}.jpg`
   }));
 
+  // --- 공유 처리 ---
+  const shareInvitation = async () => {
+    const shareUrl = window.location.href;
+    const title = `${weddingData.groom.name} ♥ ${weddingData.bride.name} 결혼식`;
+    const description = `${weddingData.date} ${weddingData.time} | ${weddingData.location}`;
+    const imageUrl = `${baseUrl}/images/og-image.jpg`;
+
+    try {
+      // 1) Kakao SDK가 초기화되어 있으면 Kakao 공유 시도
+      if (window.Kakao && window.Kakao.isInitialized && window.Kakao.Share) {
+        window.Kakao.Share.sendDefault({
+          objectType: 'feed',
+          content: {
+            title,
+            description,
+            imageUrl,
+            link: {
+              mobileWebUrl: shareUrl,
+              webUrl: shareUrl,
+            },
+          },
+          buttons: [
+            {
+              title: '모바일에서 보기',
+              link: { mobileWebUrl: shareUrl, webUrl: shareUrl },
+            },
+            {
+              title: '웹에서 보기',
+              link: { mobileWebUrl: shareUrl, webUrl: shareUrl },
+            },
+          ],
+        });
+        return;
+      }
+
+      // 2) Web Share API 지원 시 (모바일 브라우저 등)
+      if (navigator.share) {
+        await navigator.share({ title, text: description, url: shareUrl });
+        return;
+      }
+
+      // 3) 마지막 fallback: URL 복사
+      handleCopy(shareUrl);
+    } catch (err) {
+      console.error('공유 실패:', err);
+      handleCopy(shareUrl);
+    }
+  };
+
   // --- 지도 링크 처리 ---
   const handleMapLink = (type) => {
     const placeName = weddingData.location;
@@ -495,7 +544,7 @@ export default function App() {
     <footer className="py-12 px-6 bg-stone-100 text-center">
       <div className="flex justify-center gap-4 mb-8">
         <button 
-          onClick={() => handleCopy(window.location.href)}
+          onClick={shareInvitation}
           className="w-12 h-12 bg-[#FAE100] rounded-full flex items-center justify-center shadow-sm hover:scale-105 transition-transform"
         >
           <Share2 size={20} className="text-[#371D1E]" />
