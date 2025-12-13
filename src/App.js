@@ -54,7 +54,7 @@ export default function App() {
   // --- 공유 처리 ---
   const shareInvitation = async () => {
     const shareUrl = window.location.href;
-    const title = '🎉승환♥경희의 결혼식에 초대합니다🎉';
+    const title = '🎉승환❤️경희의 결혼식에 초대합니다🎉';
     const imageUrl = `${baseUrl}/images/og-image.jpg`;
 
     try {
