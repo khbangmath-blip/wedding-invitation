@@ -12,6 +12,8 @@ export default function App() {
   const [activeAccordion, setActiveAccordion] = useState(null);
   const [isMuted, setIsMuted] = useState(true);
   const audioRef = useRef(null);
+  const touchStartX = useRef(null);
+  const touchStartY = useRef(null);
 
   // --- 데이터 수정 ---
   const weddingData = {
@@ -84,6 +86,49 @@ export default function App() {
   const handleNext = (e) => {
     e.stopPropagation();
     setSelectedIndex((prev) => (prev === null ? 0 : (prev + 1) % images.length));
+  };
+
+  // 터치/드래그 스와이프 감지
+  const handleTouchStart = (e) => {
+    touchStartX.current = e.touches[0].clientX;
+    touchStartY.current = e.touches[0].clientY;
+  };
+
+  const handleTouchEnd = (e) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    const deltaX = touchStartX.current - touchEndX;
+    const deltaY = touchStartY.current - touchEndY;
+    
+    // 수평 스와이프가 수직보다 크고, 최소 거리 이상 시에만 반응
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 30) {
+      deltaX > 0 ? handleNext({ stopPropagation: () => {} }) : handlePrev({ stopPropagation: () => {} });
+    }
+    
+    touchStartX.current = null;
+    touchStartY.current = null;
+  };
+
+  // 마우스 드래그도 지원 (PC)
+  const handleMouseDown = (e) => {
+    touchStartX.current = e.clientX;
+    touchStartY.current = e.clientY;
+  };
+
+  const handleMouseUp = (e) => {
+    if (touchStartX.current === null || touchStartY.current === null) return;
+    
+    const deltaX = touchStartX.current - e.clientX;
+    const deltaY = touchStartY.current - e.clientY;
+    
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+      deltaX > 0 ? handleNext({ stopPropagation: () => {} }) : handlePrev({ stopPropagation: () => {} });
+    }
+    
+    touchStartX.current = null;
+    touchStartY.current = null;
   };
 
   // 다음/이전 이미지 미리 로드하여 체감 속도 개선
@@ -473,8 +518,14 @@ export default function App() {
         <AccountSection />
         <FooterSection />
         {selectedIndex !== null && (
-          <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center" onClick={(e) => { if (e.target === e.currentTarget) closeImage(); }}>
-            <button className="absolute top-4 right-4 text-white p-2 z-10" onClick={closeImage} aria-label="닫기">
+          <div 
+            className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center" 
+            onClick={(e) => { if (e.target === e.currentTarget) closeImage(); }}
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            onMouseDown={handleMouseDown}
+            onMouseUp={handleMouseUp}
+          >            <button className="absolute top-4 right-4 text-white p-2 z-10" onClick={closeImage} aria-label="닫기">
               <X size={32} />
             </button>
             
