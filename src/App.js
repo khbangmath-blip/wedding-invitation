@@ -11,6 +11,8 @@ export default function App() {
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [activeAccordion, setActiveAccordion] = useState(null);
   const [isMuted, setIsMuted] = useState(true);
+  const [slideDirection, setSlideDirection] = useState(null);
+  const [isAnimating, setIsAnimating] = useState(false);
   const audioRef = useRef(null);
   const touchStartX = useRef(null);
   const touchStartY = useRef(null);
@@ -79,13 +81,29 @@ export default function App() {
   // --- 이미지 모달 & 슬라이드 ---
   const openImage = (index) => setSelectedIndex(index);
   const closeImage = () => setSelectedIndex(null);
+  
+  const slideToImage = (newIndex, direction) => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    setSlideDirection(direction);
+    
+    setTimeout(() => {
+      setSelectedIndex(newIndex);
+      setSlideDirection(null);
+      setIsAnimating(false);
+    }, 300);
+  };
+  
   const handlePrev = (e) => {
     e.stopPropagation();
-    setSelectedIndex((prev) => (prev === null ? 0 : (prev - 1 + images.length) % images.length));
+    const newIndex = (selectedIndex - 1 + images.length) % images.length;
+    slideToImage(newIndex, 'right');
   };
+  
   const handleNext = (e) => {
     e.stopPropagation();
-    setSelectedIndex((prev) => (prev === null ? 0 : (prev + 1) % images.length));
+    const newIndex = (selectedIndex + 1) % images.length;
+    slideToImage(newIndex, 'left');
   };
 
   // 터치/드래그 스와이프 감지
@@ -546,12 +564,20 @@ export default function App() {
                 </div>
               )}
               
-              {/* 메인 사진 (중앙) */}
-              <div className="relative z-10 max-w-[70%] max-h-[90vh] flex items-center justify-center">
+              {/* 메인 사진 (중앙) - 좌우 슬라이드 애니메이션 */}
+              <div className="relative z-10 max-w-[70%] max-h-[90vh] flex items-center justify-center overflow-hidden">
                 <img 
+                  key={selectedIndex}
                   src={images[selectedIndex].src} 
                   alt={`${selectedIndex + 1}번`} 
                   className="max-w-full max-h-full object-contain shadow-2xl"
+                  style={{
+                    transform: 
+                      slideDirection === 'left' ? 'translateX(-100%)' :
+                      slideDirection === 'right' ? 'translateX(100%)' :
+                      'translateX(0)',
+                    transition: isAnimating ? 'transform 0.3s ease-in-out' : 'none'
+                  }}
                   decoding="async"
                 />
               </div>
