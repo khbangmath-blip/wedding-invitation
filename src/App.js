@@ -19,9 +19,8 @@ export default function App() {
 
   // --- 데이터 수정 ---
   const weddingData = {
-    date: "2026년 6월 6일 토요일",
-    time: "오후 1시",
-    location: "천안 비렌티웨딩홀",
+    date: "2026년 6월 6일 토요일 오후 1시",
+    location: "천안 비렌티웨딩홀 3F 베르테홀",
     hall: "비렌티빌 3F 베르테홀",
     address: "충남 천안시 서북구 천안대로 1198-30",
     groom: {
