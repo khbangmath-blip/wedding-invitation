@@ -285,6 +285,8 @@ export default function App() {
         src={`${baseUrl}/images/main.jpg`} 
         alt="Main Wedding" 
         className="w-full h-full object-cover opacity-90"
+        loading="eager"
+        fetchPriority="high"
         onError={(e) => {
           e.target.style.display = 'none';
           e.target.parentElement.style.backgroundColor = '#ddd';
@@ -386,7 +388,8 @@ export default function App() {
                 src={img.thumb} 
                 alt={`${img.id + 1}번`}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                loading="lazy"
+                loading={idx < 6 ? 'eager' : 'lazy'}
+                fetchPriority={idx < 6 ? 'high' : 'auto'}
                 decoding="async"
                 sizes="(max-width: 768px) 33vw, 200px"
                 onError={(e) => {
