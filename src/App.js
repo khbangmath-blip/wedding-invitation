@@ -10,7 +10,7 @@ export default function App() {
   const [isCopied, setIsCopied] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [activeAccordion, setActiveAccordion] = useState(null);
-  const [isMuted, setIsMuted] = useState(true);
+  const [isMuted, setIsMuted] = useState(false);
   const [slideDirection, setSlideDirection] = useState(null);
   const [isAnimating, setIsAnimating] = useState(false);
   const audioRef = useRef(null);
@@ -24,7 +24,7 @@ export default function App() {
     hall: "비렌티빌 3F 베르테홀",
     address: "충남 천안시 서북구 천안대로 1198-30",
     groom: {
-      name: "정승환",
+      name: "승환",
       phone: "010-1234-5678",
       father: "정지형",
       mother: "신희영",
