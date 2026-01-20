@@ -313,12 +313,12 @@ export default function App() {
         <div className="flex items-center gap-2">
           <span className="font-medium">{weddingData.groom.father} · {weddingData.groom.mother}</span>
           <span className="text-xs text-stone-400">의 장남</span>
-          <span className="font-medium">{weddingData.groom.name}</span>
+          <span className="font-medium">{weddingData.groom.name.slice(1)}</span>
         </div>
         <div className="flex items-center gap-2">
           <span className="font-medium">{weddingData.bride.father} · {weddingData.bride.mother}</span>
           <span className="text-xs text-stone-400">의 장녀</span>
-          <span className="font-medium">{weddingData.bride.name}</span>
+          <span className="font-medium">{weddingData.bride.name.slice(1)}</span>
         </div>
       </div>
     </section>
