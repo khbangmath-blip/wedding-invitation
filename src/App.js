@@ -219,6 +219,24 @@ export default function App() {
     }
   }, [isMuted]);
 
+  // 페이지 로드 후 자동으로 음악 재생 (브라우저 정책 우회)
+  useEffect(() => {
+    const playAudio = async () => {
+      if (!audioRef.current) return;
+      audioRef.current.muted = true;
+      try {
+        await audioRef.current.play();
+        // 약간의 지연 후 음소거 해제
+        setTimeout(() => {
+          audioRef.current.muted = false;
+        }, 100);
+      } catch (err) {
+        console.log('초기 음악 재생 실패:', err);
+      }
+    };
+    playAudio();
+  }, []);
+
   // --- 헬퍼 함수 ---
   const handleCopy = (text) => {
     if (navigator.clipboard && navigator.clipboard.writeText) {
@@ -549,17 +567,6 @@ export default function App() {
         </button>
         <button onClick={() => handleCopy(window.location.href)} className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm hover:scale-105 transition-transform">
           <Copy size={20} className="text-stone-600" />
-        </button>
-        <button 
-          onClick={() => setIsMuted(!isMuted)} 
-          className="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm hover:scale-105 transition-transform"
-          title={isMuted ? "음악 재생" : "음악 멈춤"}
-        >
-          {isMuted ? (
-            <VolumeX size={20} className="text-stone-600" />
-          ) : (
-            <Volume2 size={20} className="text-stone-600" />
-          )}
         </button>
       </div>
       <p className="text-xs text-stone-400">Copyright 2026. All rights reserved.</p>
