@@ -37,11 +37,12 @@ export default function App() {
     },
   };
 
-  const baseUrl = process.env.PUBLIC_URL || '';
-  const images = Array.from({ length: 17 }, (_, i) => ({
-    id: i,
-    src: `${baseUrl}/images/photo_${i + 1}.jpg`
-  }));
+    const baseUrl = process.env.PUBLIC_URL || '';
+    const images = Array.from({ length: 17 }, (_, i) => ({
+      id: i,
+      webp: `${baseUrl}/images/photo_${i + 1}.webp`,
+      jpg: `${baseUrl}/images/photo_${i + 1}.jpg`
+    }));
 
   // --- 공유 처리 ---
   const shareInvitation = async () => {
@@ -192,7 +193,7 @@ export default function App() {
     if (selectedIndex === null) return;
     const preload = (idx) => {
       const img = new Image();
-      img.src = images[idx].src;
+      img.src = images[idx].webp || images[idx].jpg;
     };
     preload((selectedIndex + 1) % images.length);
     preload((selectedIndex - 1 + images.length) % images.length);
@@ -273,22 +274,24 @@ export default function App() {
   const HeroSection = () => (
     <div className="relative w-full h-[600px] bg-stone-100 overflow-hidden">
       {/* GitHub Pages 호환: PUBLIC_URL 기준 경로 사용 */}
-      <img 
-        src={`${baseUrl}/images/main.jpg`} 
-        alt="Main Wedding" 
-        className="w-full h-full object-cover opacity-90"
-        loading="eager"
-        fetchPriority="high"
-        onError={(e) => {
-          e.target.style.display = 'none';
-          e.target.parentElement.style.backgroundColor = '#ddd';
-          // 에러 메시지가 더 잘 보이도록 스타일 수정
-          const msg = document.createElement('div');
-          msg.className = "absolute inset-0 flex flex-col items-center justify-center text-gray-500 text-center p-4";
-          msg.innerHTML = `<p class="font-bold mb-2">이미지 없음</p><p class="text-xs">프로젝트 폴더의<br/>public/images/main.jpg<br/>파일을 넣어주세요.</p>`;
-          e.target.parentElement.appendChild(msg);
-        }}
-      />
+      <picture>
+        <source type="image/webp" srcSet={`${baseUrl}/images/main.webp`} />
+        <img 
+          src={`${baseUrl}/images/main.jpg`} 
+          alt="Main Wedding" 
+          className="w-full h-full object-cover opacity-90"
+          loading="eager"
+          fetchPriority="high"
+          onError={(e) => {
+            e.target.style.display = 'none';
+            e.target.parentElement.style.backgroundColor = '#ddd';
+            const msg = document.createElement('div');
+            msg.className = "absolute inset-0 flex flex-col items-center justify-center text-gray-500 text-center p-4";
+            msg.innerHTML = `<p class="font-bold mb-2">이미지 없음</p><p class="text-xs">프로젝트 폴더의<br/>public/images/main.jpg<br/>파일을 넣어주세요.</p>`;
+            e.target.parentElement.appendChild(msg);
+          }}
+        />
+      </picture>
       <div className="absolute inset-0 flex flex-col items-center justify-end bg-gradient-to-t from-black/80 via-black/30 to-transparent text-white pb-10">
         <div className="text-lg tracking-[0.2em] mb-4 uppercase opacity-90">Wedding Invitation</div>
         <div className="text-4xl font-serif mb-6 flex items-center gap-3">
@@ -375,23 +378,25 @@ export default function App() {
               className="aspect-[2/3] overflow-hidden cursor-pointer relative group bg-gray-100 border border-white"
               onClick={() => openImage(idx)}
             >
-              <img 
-                src={img.src} 
-                alt={`${img.id + 1}번`}
-                className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                loading={idx < 6 ? 'eager' : 'lazy'}
-                fetchPriority={idx < 6 ? 'high' : 'auto'}
-                decoding="async"
-                sizes="(max-width: 768px) 33vw, 200px"
-                onError={(e) => {
-                   e.target.style.display = 'none';
-                   // 텍스트 표시
-                   const span = document.createElement('span');
-                   span.className = "absolute inset-0 flex items-center justify-center text-gray-400 text-[10px] text-center p-1 break-all";
-                   span.innerText = `photo_${img.id + 1}.jpg`;
-                   e.target.parentElement.appendChild(span);
-                }}
-              />
+              <picture>
+                <source type="image/webp" srcSet={img.webp} />
+                <img 
+                  src={img.jpg} 
+                  alt={`${img.id + 1}번`}
+                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                  loading={idx < 6 ? 'eager' : 'lazy'}
+                  fetchPriority={idx < 6 ? 'high' : 'auto'}
+                  decoding="async"
+                  sizes="(max-width: 768px) 33vw, 200px"
+                  onError={(e) => {
+                     e.target.style.display = 'none';
+                     const span = document.createElement('span');
+                     span.className = "absolute inset-0 flex items-center justify-center text-gray-400 text-[10px] text-center p-1 break-all";
+                     span.innerText = `photo_${img.id + 1}.jpg`;
+                     e.target.parentElement.appendChild(span);
+                  }}
+                />
+              </picture>
             </div>
           ))}
         </div>
@@ -410,19 +415,21 @@ export default function App() {
         
         <div className="w-full min-h-[200px] bg-gray-200 mb-6 rounded flex items-center justify-center text-gray-400 overflow-hidden relative">
            {/* GitHub Pages 호환: PUBLIC_URL 기준 경로 사용 */}
-           <img 
-             src={`${baseUrl}/images/map.jpg`} 
-             alt="약도" 
-             className="w-full h-auto"
-             onError={(e) => {
-                 e.target.style.display = 'none';
-                 // 대체 텍스트 표시
-                 const div = document.createElement('div');
-                 div.className = "absolute inset-0 flex flex-col items-center justify-center";
-                 div.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-2 opacity-50"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg><span class="text-xs">map.jpg 파일을 넣어주세요</span>`;
-                 e.target.parentElement.appendChild(div);
-             }}
-           />
+           <picture>
+             <source type="image/webp" srcSet={`${baseUrl}/images/map.webp`} />
+             <img 
+               src={`${baseUrl}/images/map.jpg`} 
+               alt="약도" 
+               className="w-full h-auto"
+               onError={(e) => {
+                   e.target.style.display = 'none';
+                   const div = document.createElement('div');
+                   div.className = "absolute inset-0 flex flex-col items-center justify-center";
+                   div.innerHTML = `<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mb-2 opacity-50"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg><span class="text-xs">map.jpg 파일을 넣어주세요</span>`;
+                   e.target.parentElement.appendChild(div);
+               }}
+             />
+           </picture>
         </div>
 
         <div className="flex gap-2 justify-center">
@@ -610,31 +617,37 @@ export default function App() {
                   className="absolute left-0 top-1/2 -translate-y-1/2 w-1/4 h-3/5 flex items-center justify-center cursor-pointer opacity-30 hover:opacity-50 transition-opacity"
                   onClick={handlePrev}
                 >
-                  <img 
-                    src={images[(selectedIndex - 1 + images.length) % images.length].src} 
-                    alt="이전" 
-                    className="max-w-full max-h-full object-contain"
-                    decoding="async"
-                  />
+                  <picture>
+                    <source type="image/webp" srcSet={images[(selectedIndex - 1 + images.length) % images.length].webp} />
+                    <img 
+                      src={images[(selectedIndex - 1 + images.length) % images.length].jpg} 
+                      alt="이전" 
+                      className="max-w-full max-h-full object-contain"
+                      decoding="async"
+                    />
+                  </picture>
                 </div>
               )}
               
               {/* 메인 사진 (중앙) - 좌우 슬라이드 애니메이션 */}
               <div className="relative z-10 max-w-[70%] max-h-[90vh] flex items-center justify-center overflow-hidden">
-                <img 
-                  key={selectedIndex}
-                  src={images[selectedIndex].src} 
-                  alt={`${selectedIndex + 1}번`} 
-                  className="max-w-full max-h-full object-contain shadow-2xl"
-                  style={{
-                    transform: 
-                      slideDirection === 'left' ? 'translateX(-100%)' :
-                      slideDirection === 'right' ? 'translateX(100%)' :
-                      'translateX(0)',
-                    transition: isAnimating ? 'transform 0.3s ease-in-out' : 'none'
-                  }}
-                  decoding="async"
-                />
+                <picture>
+                  <source type="image/webp" srcSet={images[selectedIndex].webp} />
+                  <img 
+                    key={selectedIndex}
+                    src={images[selectedIndex].jpg} 
+                    alt={`${selectedIndex + 1}번`} 
+                    className="max-w-full max-h-full object-contain shadow-2xl"
+                    style={{
+                      transform: 
+                        slideDirection === 'left' ? 'translateX(-100%)' :
+                        slideDirection === 'right' ? 'translateX(100%)' :
+                        'translateX(0)',
+                      transition: isAnimating ? 'transform 0.3s ease-in-out' : 'none'
+                    }}
+                    decoding="async"
+                  />
+                </picture>
               </div>
               
               {/* 다음 사진 미리보기 (오른쪽) */}
@@ -643,12 +656,15 @@ export default function App() {
                   className="absolute right-0 top-1/2 -translate-y-1/2 w-1/4 h-3/5 flex items-center justify-center cursor-pointer opacity-30 hover:opacity-50 transition-opacity"
                   onClick={handleNext}
                 >
-                  <img 
-                    src={images[(selectedIndex + 1) % images.length].src} 
-                    alt="다음" 
-                    className="max-w-full max-h-full object-contain"
-                    decoding="async"
-                  />
+                  <picture>
+                    <source type="image/webp" srcSet={images[(selectedIndex + 1) % images.length].webp} />
+                    <img 
+                      src={images[(selectedIndex + 1) % images.length].jpg} 
+                      alt="다음" 
+                      className="max-w-full max-h-full object-contain"
+                      decoding="async"
+                    />
+                  </picture>
                 </div>
               )}
               
