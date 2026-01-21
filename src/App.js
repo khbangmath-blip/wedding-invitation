@@ -513,8 +513,8 @@ export default function App() {
               <div className="flex justify-between items-center pb-2 border-b border-stone-200/50">
                 <div>
                   <div className="text-xs text-stone-400 mb-1">{type === 'groom' ? '신랑' : '신부'}</div>
-                  <div className="text-stone-700">{data.bank}</div>
                   <div className="text-stone-600 font-medium">{data.name}</div>
+                  <div className="text-stone-700">{data.bank}</div>
                 </div>
                 <button onClick={() => handleCopy(data.bank)} className="px-3 py-1.5 bg-white border border-stone-200 rounded text-xs text-stone-600 hover:bg-stone-50 flex items-center gap-1">
                   <Copy size={12} /> 복사
@@ -523,8 +523,8 @@ export default function App() {
               <div className="flex justify-between items-center pb-2 border-b border-stone-200/50">
                 <div>
                   <div className="text-xs text-stone-400 mb-1">혼주 (부)</div>
-                  <div className="text-stone-700">{data.fatherBank}</div>
                   <div className="text-stone-600 font-medium">{data.father}</div>
+                  <div className="text-stone-700">{data.fatherBank}</div>
                 </div>
                 <button onClick={() => handleCopy(data.fatherBank)} className="px-3 py-1.5 bg-white border border-stone-200 rounded text-xs text-stone-600 hover:bg-stone-50 flex items-center gap-1">
                   <Copy size={12} /> 복사
@@ -533,8 +533,8 @@ export default function App() {
                <div className="flex justify-between items-center">
                 <div>
                   <div className="text-xs text-stone-400 mb-1">혼주 (모)</div>
-                  <div className="text-stone-700">{data.motherBank}</div>
                   <div className="text-stone-600 font-medium">{data.mother}</div>
+                  <div className="text-stone-700">{data.motherBank}</div>
                 </div>
                 <button onClick={() => handleCopy(data.motherBank)} className="px-3 py-1.5 bg-white border border-stone-200 rounded text-xs text-stone-600 hover:bg-stone-50 flex items-center gap-1">
                   <Copy size={12} /> 복사
