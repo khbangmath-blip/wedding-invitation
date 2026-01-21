@@ -37,12 +37,12 @@ export default function App() {
     },
   };
 
-    const baseUrl = process.env.PUBLIC_URL || '';
-    const images = Array.from({ length: 17 }, (_, i) => ({
-      id: i,
-      webp: `${baseUrl}/images/photo_${i + 1}.webp`,
-      jpg: `${baseUrl}/images/photo_${i + 1}.jpg`
-    }));
+  const baseUrl = process.env.PUBLIC_URL || '';
+  const images = Array.from({ length: 17 }, (_, i) => ({
+    id: i,
+    webp: `${baseUrl}/images/photo_${i + 1}.webp`,
+    jpg: `${baseUrl}/images/photo_${i + 1}.jpg`
+  }));
 
   // --- 공유 처리 ---
   const shareInvitation = async () => {
