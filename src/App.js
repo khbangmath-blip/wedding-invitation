@@ -1,10 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { Copy, Share2, X, ChevronDown, ChevronUp, Navigation, ChevronLeft, ChevronRight, Volume2, VolumeX } from 'lucide-react';
 
-// ★★★ 수정 완료: 온라인/오프라인 호환 코드 ★★★
-// process.env.PUBLIC_URL을 제거하여 브라우저 오류를 해결했습니다.
-// 사진 파일 위치: public/images/ 폴더
-
 export default function App() {
   // --- 상태 관리 ---
   const [isCopied, setIsCopied] = useState(false);
@@ -25,7 +21,6 @@ export default function App() {
     address: "충남 천안시 서북구 천안대로 1198-30",
     groom: {
       name: "정승환",
-      phone: "010-1234-5678",
       father: "정지형",
       mother: "신희영",
       bank: "우체국 50406805010841",
@@ -34,7 +29,6 @@ export default function App() {
     },
     bride: {
       name: "방경희",
-      phone: "010-9876-5432",
       father: "방치남",
       mother: "송은경",
       bank: "농협 352-1012-8584-03",
@@ -43,12 +37,10 @@ export default function App() {
     },
   };
 
-  // --- 이미지 데이터 (썸네일/원본 동일 경로) ---
   const baseUrl = process.env.PUBLIC_URL || '';
   const images = Array.from({ length: 17 }, (_, i) => ({
     id: i,
-    src: `${baseUrl}/images/photo_${i + 1}.jpg`,
-    thumb: `${baseUrl}/images/photo_${i + 1}.jpg`
+    src: `${baseUrl}/images/photo_${i + 1}.jpg`
   }));
 
   // --- 공유 처리 ---
@@ -306,7 +298,6 @@ export default function App() {
         </div>
         <div className="text-center font-light tracking-wide text-sm opacity-90">
           <p>{weddingData.date}</p>
-          <p className="mt-1">{weddingData.time}</p>
           <p className="mt-1">{weddingData.location}</p>
           <p className="mt-1">{weddingData.hall}</p>
         </div>
@@ -385,7 +376,7 @@ export default function App() {
               onClick={() => openImage(idx)}
             >
               <img 
-                src={img.thumb} 
+                src={img.src} 
                 alt={`${img.id + 1}번`}
                 className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                 loading={idx < 6 ? 'eager' : 'lazy'}
@@ -585,6 +576,13 @@ export default function App() {
         preload="auto"
       />
       <div className="max-w-md mx-auto shadow-2xl bg-white min-h-screen relative">
+        <button 
+          onClick={() => setIsMuted(!isMuted)}
+          className="fixed top-4 right-4 z-40 w-12 h-12 bg-black/50 hover:bg-black/70 rounded-full flex items-center justify-center text-white shadow-lg transition-all backdrop-blur-sm"
+          aria-label={isMuted ? '음악 재생' : '음악 정지'}
+        >
+          {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+        </button>
         <HeroSection />
         <GreetingSection />
         <CalendarSection />
