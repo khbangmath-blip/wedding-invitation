@@ -378,8 +378,8 @@ export default function App() {
               src={img.jpg} 
                   alt={`${img.id + 1}번`}
                   className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  loading={idx < 6 ? 'eager' : 'lazy'}
-                  fetchPriority={idx < 6 ? 'high' : 'auto'}
+                  loading="eager"
+                  fetchPriority="high"
                   decoding="async"
               sizes="(max-width: 768px) 33vw, 200px"
               onError={(e) => {
