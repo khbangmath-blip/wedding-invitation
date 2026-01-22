@@ -564,18 +564,18 @@ export default function App() {
               {images.length > 1 && (
                 <>
                   <button 
-                    className="absolute left-4 top-1/2 -translate-y-1/2 z-20 text-white p-3 bg-black/50 hover:bg-black/70 rounded-full backdrop-blur-sm transition-all" 
+                    className="absolute left-4 top-1/2 -translate-y-1/2 z-20 text-white p-2 bg-black/30 hover:bg-black/50 rounded-full backdrop-blur-sm transition-all" 
                     onClick={handlePrev} 
                     aria-label="이전"
                   >
-                    <ChevronLeft size={32} />
+                    <ChevronLeft size={24} />
                   </button>
                   <button 
-                    className="absolute right-4 top-1/2 -translate-y-1/2 z-20 text-white p-3 bg-black/50 hover:bg-black/70 rounded-full backdrop-blur-sm transition-all" 
+                    className="absolute right-4 top-1/2 -translate-y-1/2 z-20 text-white p-2 bg-black/30 hover:bg-black/50 rounded-full backdrop-blur-sm transition-all" 
                     onClick={handleNext} 
                     aria-label="다음"
                   >
-                    <ChevronRight size={32} />
+                    <ChevronRight size={24} />
                   </button>
                 </>
               )}
