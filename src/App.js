@@ -7,11 +7,7 @@ export default function App() {
   const [selectedIndex, setSelectedIndex] = useState(null);
   const [activeAccordion, setActiveAccordion] = useState(null);
   const [isMuted, setIsMuted] = useState(false);
-  const [slideDirection, setSlideDirection] = useState(null);
-  const [isAnimating, setIsAnimating] = useState(false);
   const audioRef = useRef(null);
-  const touchStartX = useRef(null);
-  const touchStartY = useRef(null);
 
   // --- 데이터 수정 ---
   const weddingData = {
@@ -120,72 +116,29 @@ export default function App() {
   const openImage = (index) => setSelectedIndex(index);
   const closeImage = () => setSelectedIndex(null);
   
-  const slideToImage = (newIndex, direction) => {
-    if (isAnimating) return;
-    setIsAnimating(true);
-    setSlideDirection(direction);
-    
-    setTimeout(() => {
-      setSelectedIndex(newIndex);
-      setSlideDirection(null);
-      setIsAnimating(false);
-    }, 300);
-  };
-  
   const handlePrev = (e) => {
-    e.stopPropagation();
+    e?.stopPropagation?.();
     const newIndex = (selectedIndex - 1 + images.length) % images.length;
-    slideToImage(newIndex, 'right');
+    setSelectedIndex(newIndex);
   };
   
   const handleNext = (e) => {
-    e.stopPropagation();
+    e?.stopPropagation?.();
     const newIndex = (selectedIndex + 1) % images.length;
-    slideToImage(newIndex, 'left');
+    setSelectedIndex(newIndex);
   };
 
-  // 터치/드래그 스와이프 감지
-  const handleTouchStart = (e) => {
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-  };
-
-  const handleTouchEnd = (e) => {
-    if (touchStartX.current === null || touchStartY.current === null) return;
-    
-    const touchEndX = e.changedTouches[0].clientX;
-    const touchEndY = e.changedTouches[0].clientY;
-    const deltaX = touchStartX.current - touchEndX;
-    const deltaY = touchStartY.current - touchEndY;
-    
-    // 수평 스와이프가 수직보다 크고, 최소 거리 이상 시에만 반응
-    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 30) {
-      deltaX > 0 ? handleNext({ stopPropagation: () => {} }) : handlePrev({ stopPropagation: () => {} });
-    }
-    
-    touchStartX.current = null;
-    touchStartY.current = null;
-  };
-
-  // 마우스 드래그도 지원 (PC)
-  const handleMouseDown = (e) => {
-    touchStartX.current = e.clientX;
-    touchStartY.current = e.clientY;
-  };
-
-  const handleMouseUp = (e) => {
-    if (touchStartX.current === null || touchStartY.current === null) return;
-    
-    const deltaX = touchStartX.current - e.clientX;
-    const deltaY = touchStartY.current - e.clientY;
-    
-    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
-      deltaX > 0 ? handleNext({ stopPropagation: () => {} }) : handlePrev({ stopPropagation: () => {} });
-    }
-    
-    touchStartX.current = null;
-    touchStartY.current = null;
-  };
+  // 키보드 네비게이션
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (selectedIndex === null) return;
+      if (e.key === 'ArrowLeft') handlePrev();
+      if (e.key === 'ArrowRight') handleNext();
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedIndex]);
 
   // 다음/이전 이미지 미리 로드하여 체감 속도 개선
   useEffect(() => {
@@ -591,63 +544,21 @@ export default function App() {
           <div 
             className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center" 
             onClick={(e) => { if (e.target === e.currentTarget) closeImage(); }}
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-            onMouseDown={handleMouseDown}
-            onMouseUp={handleMouseUp}
-          >            <button className="absolute top-4 right-4 text-white p-2 z-10" onClick={closeImage} aria-label="닫기">
+          >
+            <button className="absolute top-4 right-4 text-white p-2 z-10" onClick={closeImage} aria-label="닫기">
               <X size={32} />
             </button>
             
-            {/* 캐러셀 컨테이너 */}
-            <div className="relative w-full h-full flex items-center justify-center overflow-hidden">
-              {/* 이전 사진 미리보기 (왼쪽) */}
-              {images.length > 1 && (
-                <div 
-                  className="absolute left-0 top-1/2 -translate-y-1/2 w-1/4 h-3/5 flex items-center justify-center cursor-pointer opacity-30 hover:opacity-50 transition-opacity"
-                  onClick={handlePrev}
-                >
-                  <img 
-                  src={images[(selectedIndex - 1 + images.length) % images.length].jpg} 
-                  alt="이전" 
-                  className="max-w-full max-h-full object-contain"
-                  decoding="async"
-                />
-                </div>
-              )}
-              
-              {/* 메인 사진 (중앙) - 좌우 슬라이드 애니메이션 */}
-              <div className="relative z-10 max-w-[70%] max-h-[90vh] flex items-center justify-center overflow-hidden">
-                <img 
-                  key={selectedIndex}
-                  src={images[selectedIndex].jpg} 
-                    alt={`${selectedIndex + 1}번`} 
-                  className="max-w-full max-h-full object-contain shadow-2xl"
-                  style={{
-                    transform: 
-                      slideDirection === 'left' ? 'translateX(-100%)' :
-                      slideDirection === 'right' ? 'translateX(100%)' :
-                      'translateX(0)',
-                    transition: isAnimating ? 'transform 0.3s ease-in-out' : 'none'
-                  }}
-                  decoding="async"
-                />
-              </div>
-              
-              {/* 다음 사진 미리보기 (오른쪽) */}
-              {images.length > 1 && (
-                <div 
-                  className="absolute right-0 top-1/2 -translate-y-1/2 w-1/4 h-3/5 flex items-center justify-center cursor-pointer opacity-30 hover:opacity-50 transition-opacity"
-                  onClick={handleNext}
-                >
-                  <img 
-                  src={images[(selectedIndex + 1) % images.length].jpg}
-                  alt="다음" 
-                  className="max-w-full max-h-full object-contain"
-                  decoding="async"
-                />
-                </div>
-              )}
+            {/* 이미지 컨테이너 */}
+            <div className="relative w-full h-full flex items-center justify-center">
+              {/* 메인 사진 - 화면 가득 채우기 */}
+              <img 
+                key={selectedIndex}
+                src={images[selectedIndex].jpg} 
+                alt={`${selectedIndex + 1}번`} 
+                className="w-full h-full object-contain"
+                decoding="async"
+              />
               
               {/* 화살표 버튼 */}
               {images.length > 1 && (
