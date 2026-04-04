@@ -1,13 +1,69 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Copy, Share2, X, ChevronDown, ChevronUp, Navigation, ChevronLeft, ChevronRight, Volume2, VolumeX } from 'lucide-react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { Copy, Share2, ChevronDown, ChevronUp, Navigation, ChevronLeft, ChevronRight, Volume2, VolumeX } from 'lucide-react';
 
 export default function App() {
   // --- 상태 관리 ---
   const [isCopied, setIsCopied] = useState(false);
-  const [selectedIndex, setSelectedIndex] = useState(null);
   const [activeAccordion, setActiveAccordion] = useState(null);
   const [isMuted, setIsMuted] = useState(false);
+  const [showAudioNotice, setShowAudioNotice] = useState(true);
+  const [isNoticeHiding, setIsNoticeHiding] = useState(false);
+  const [gallerySlideIndex, setGallerySlideIndex] = useState(0);
+  const [galleryDragOffset, setGalleryDragOffset] = useState(0);
+  const [galleryIsDragging, setGalleryIsDragging] = useState(false);
+  const [galleryContainerWidth, setGalleryContainerWidth] = useState(0);
+  const [visibleSections, setVisibleSections] = useState(new Set());
+  const galleryContainerRef = useRef(null);
   const audioRef = useRef(null);
+  const greetingSectionRef = useRef(null);
+  const calendarSectionRef = useRef(null);
+  const aboutSectionRef = useRef(null);
+  const gallerySectionRef = useRef(null);
+  const locationSectionRef = useRef(null);
+  const accountSectionRef = useRef(null);
+  const footerSectionRef = useRef(null);
+
+  // --- 슬라이드업 애니메이션 헬퍼 ---
+  const ani = useCallback((sectionName, index, delayMs) => {
+    const delay = delayMs !== undefined ? delayMs : index * 100;
+    const isVisible = visibleSections.has(sectionName);
+    if (isVisible) {
+      return {
+        style: {
+          opacity: 1,
+          transform: 'translateY(0)',
+          transition: `opacity 2s cubic-bezier(0.22,1,0.36,1) ${delay}ms, transform 2s cubic-bezier(0.22,1,0.36,1) ${delay}ms`,
+        },
+      };
+    }
+    return { style: { opacity: 0, transform: 'translateY(30px)' } };
+  }, [visibleSections]);
+
+  // --- 스크롤 애니메이션 설정 (data-section 기반) ---
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const names = entries
+          .filter((e) => e.isIntersecting)
+          .map((e) => e.target.dataset.section)
+          .filter(Boolean);
+        if (names.length > 0) {
+          setVisibleSections((prev) => {
+            const next = new Set(prev);
+            names.forEach((n) => next.add(n));
+            return next;
+          });
+        }
+      },
+      { threshold: 0.08, rootMargin: '0px 0px -8% 0px' }
+    );
+
+    document.querySelectorAll('[data-section]').forEach((el) => {
+      if (!visibleSections.has(el.dataset.section)) observer.observe(el);
+    });
+
+    return () => observer.disconnect();
+  });
 
   // --- 데이터 수정 ---
   const weddingData = {
@@ -34,10 +90,48 @@ export default function App() {
   };
 
   const baseUrl = process.env.PUBLIC_URL || '';
-  const images = Array.from({ length: 17 }, (_, i) => ({
-    id: i,
-    jpg: `${baseUrl}/images/photo_${i + 1}.jpg`
-  }));
+  const images = [
+    ...Array.from({ length: 17 }, (_, i) => ({
+      id: i,
+      jpg: `${baseUrl}/images/photo_${i + 1}.jpg`
+    })),
+    {
+      id: 17,
+      jpg: `${baseUrl}/images/main.jpg`
+    }
+  ];
+
+  const aboutImages = {
+    groom: `${baseUrl}/images/about_groom.jpg`,
+    bride: `${baseUrl}/images/about_bride.jpg`,
+  };
+
+  const timelineItems = [
+    {
+      id: 1,
+      title: '봄날의 캠퍼스',
+      description: '예쁘게 개나리가 핀 응용과학관에서 승환이는 경희를 졸졸 따라다녔습니다.',
+      image: `${baseUrl}/images/timeline_1.jpg`,
+    },
+    {
+      id: 2,
+      title: '서로의 든든한 버팀목',
+      description: '치열하게 임용고시를 준비할 때도, 군 복무로 떨어져 있을 때도 승환이와 경희는 서로의 가장 따뜻한 응원군이 되어주었습니다.',
+      image: `${baseUrl}/images/timeline_2.jpg`,
+    },
+    {
+      id: 3,
+      title: '나란히 걷는 길',
+      description: '마침내 나란히 선생님이라는 꿈을 이룬 두 사람은, 알콩달콩 다정한 일상을 그려가고 있습니다.',
+      image: `${baseUrl}/images/timeline_3.jpg`,
+    },
+    {
+      id: 4,
+      title: '평생의 동반자',
+      description: '가장 빛나는 청춘을 함께한 승환이와 경희는 이제 두 손을 꼭 잡고 평생의 짝꿍이 되기로 약속했습니다.',
+      image: `${baseUrl}/images/timeline_4.jpg`,
+    },
+  ];
 
   // --- 공유 처리 ---
   const shareInvitation = async () => {
@@ -112,45 +206,92 @@ export default function App() {
     }
   };
 
-  // --- 이미지 모달 & 슬라이드 ---
-  const openImage = (index) => setSelectedIndex(index);
-  const closeImage = () => setSelectedIndex(null);
-  
-  const handlePrev = (e) => {
+  // --- 갤러리 슬라이드 ---
+  const handleGalleryPrev = (e) => {
     e?.stopPropagation?.();
-    const newIndex = (selectedIndex - 1 + images.length) % images.length;
-    setSelectedIndex(newIndex);
-  };
-  
-  const handleNext = (e) => {
-    e?.stopPropagation?.();
-    const newIndex = (selectedIndex + 1) % images.length;
-    setSelectedIndex(newIndex);
+    setGallerySlideIndex((prev) => (prev - 1 + images.length) % images.length);
   };
 
-  // 키보드 네비게이션
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (selectedIndex === null) return;
-      if (e.key === 'ArrowLeft') handlePrev();
-      if (e.key === 'ArrowRight') handleNext();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedIndex]);
+  const handleGalleryNext = (e) => {
+    e?.stopPropagation?.();
+    setGallerySlideIndex((prev) => (prev + 1) % images.length);
+  };
 
-  // 다음/이전 이미지 미리 로드하여 체감 속도 개선
+  // 터치 이벤트를 ref로 직접 등록 (non-passive)
+  const galleryTouchRef = useRef({ startX: 0, startY: 0, isDragging: false, isHorizontal: null });
+
   useEffect(() => {
-    if (selectedIndex === null) return;
-    const preload = (idx) => {
-      const img = new Image();
-      img.src = images[idx].jpg;
+    const el = galleryContainerRef.current;
+    if (!el) return;
+
+    const onTouchStart = (e) => {
+      const t = e.touches[0];
+      galleryTouchRef.current = { startX: t.clientX, startY: t.clientY, isDragging: true, isHorizontal: null };
+      setGalleryDragOffset(0);
+      setGalleryIsDragging(true);
     };
-    preload((selectedIndex + 1) % images.length);
-    preload((selectedIndex - 1 + images.length) % images.length);
+
+    const onTouchMove = (e) => {
+      const ref = galleryTouchRef.current;
+      if (!ref.isDragging) return;
+      const t = e.touches[0];
+      const dx = t.clientX - ref.startX;
+      const dy = t.clientY - ref.startY;
+
+      // 첫 10px 이동으로 수평/수직 판별
+      if (ref.isHorizontal === null && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) {
+        ref.isHorizontal = Math.abs(dx) > Math.abs(dy);
+      }
+
+      if (ref.isHorizontal) {
+        e.preventDefault();
+        setGalleryDragOffset(dx);
+      }
+    };
+
+    const onTouchEnd = (e) => {
+      const ref = galleryTouchRef.current;
+      if (!ref.isDragging) return;
+      const endX = e.changedTouches[0].clientX;
+      const distance = endX - ref.startX;
+
+      ref.isDragging = false;
+      setGalleryIsDragging(false);
+      setGalleryDragOffset(0);
+
+      if (ref.isHorizontal) {
+        const MIN_SWIPE = 40;
+        if (distance < -MIN_SWIPE) {
+          setGallerySlideIndex((prev) => (prev + 1) % images.length);
+        } else if (distance > MIN_SWIPE) {
+          setGallerySlideIndex((prev) => (prev - 1 + images.length) % images.length);
+        }
+      }
+      ref.isHorizontal = null;
+    };
+
+    el.addEventListener('touchstart', onTouchStart, { passive: true });
+    el.addEventListener('touchmove', onTouchMove, { passive: false });
+    el.addEventListener('touchend', onTouchEnd, { passive: true });
+
+    return () => {
+      el.removeEventListener('touchstart', onTouchStart);
+      el.removeEventListener('touchmove', onTouchMove);
+      el.removeEventListener('touchend', onTouchEnd);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedIndex]);
+  }, [images.length]);
+
+  useEffect(() => {
+    const updateContainerWidth = () => {
+      if (!galleryContainerRef.current) return;
+      setGalleryContainerWidth(galleryContainerRef.current.getBoundingClientRect().width);
+    };
+
+    updateContainerWidth();
+    window.addEventListener('resize', updateContainerWidth);
+    return () => window.removeEventListener('resize', updateContainerWidth);
+  }, []);
 
   // 배경음악 제어
   useEffect(() => {
@@ -180,6 +321,21 @@ export default function App() {
       }
     };
     playAudio();
+  }, []);
+
+  useEffect(() => {
+    const hideTimeout = setTimeout(() => {
+      setIsNoticeHiding(true);
+    }, 5000);
+    const removeTimeout = setTimeout(() => {
+      setShowAudioNotice(false);
+      setIsNoticeHiding(false);
+    }, 5350);
+
+    return () => {
+      clearTimeout(hideTimeout);
+      clearTimeout(removeTimeout);
+    };
   }, []);
 
   // --- 헬퍼 함수 ---
@@ -224,7 +380,7 @@ export default function App() {
   // --- 컴포넌트 섹션 ---
 
   const HeroSection = () => (
-    <div className="relative w-full h-[600px] bg-stone-100 overflow-hidden">
+    <div className="relative w-full h-[600px] bg-stone-100 overflow-hidden animate-hero-fade-in">
       {/* GitHub Pages 호환: PUBLIC_URL 기준 경로 사용 */}
       <img 
         src={`${baseUrl}/images/main.jpg`} 
@@ -257,13 +413,13 @@ export default function App() {
     </div>
   );
 
-  const GreetingSection = () => (
-    <section className="py-16 px-6 text-center bg-white">
-      <div className="mb-8">
+  const greetingJSX = (
+    <section ref={greetingSectionRef} data-section="greeting" className="py-16 px-6 text-center bg-white">
+      <div style={ani('greeting', 0).style}>
         <h2 className="text-xl font-serif text-stone-700 tracking-widest mb-2">초대합니다</h2>
         <div className="w-8 h-[1px] bg-stone-300 mx-auto"></div>
       </div>
-      <p className="text-stone-600 leading-8 font-light text-sm whitespace-pre-line">
+      <p className="text-stone-600 leading-8 font-light text-sm whitespace-pre-line" style={ani('greeting', 1).style}>
         각자의 수식으로 가득했던 저희 두 사람이{'\n'}
         인생의 가장 아름다운 공통해를 찾았습니다.{'\n'}
         더하고 나누며 사랑을 키워온 저희{'\n'}
@@ -271,8 +427,7 @@ export default function App() {
         저희의 첫 공개수업에 귀한 분들을 초대합니다.{'\n'}
         부디 오셔서 따뜻한 격려와 박수를 보내주세요.{'\n'}
       </p>
-      
-      <div className="mt-12 flex flex-col items-center gap-4 text-stone-700">
+      <div className="mt-12 flex flex-col items-center gap-4 text-stone-700" style={ani('greeting', 2).style}>
         <div className="flex items-center gap-2">
           <span className="font-medium">{weddingData.groom.father} · {weddingData.groom.mother}</span>
           <span className="text-xs text-stone-400">의 장남</span>
@@ -287,13 +442,12 @@ export default function App() {
     </section>
   );
 
-  const CalendarSection = () => (
-    <section className="py-16 px-6 bg-stone-50">
+  const calendarJSX = (
+    <section ref={calendarSectionRef} data-section="calendar" className="py-16 px-6 bg-stone-50">
       <div className="max-w-xs mx-auto text-center">
-        <h3 className="text-3xl font-serif text-stone-800 mb-2">6월</h3>
-        <p className="text-stone-500 text-sm mb-8">June, 2026</p>
-        
-        <div className="grid grid-cols-7 gap-4 text-sm text-stone-600 mb-8 font-light">
+        <h3 className="text-3xl font-serif text-stone-800 mb-2" style={ani('calendar', 0).style}>6월</h3>
+        <p className="text-stone-500 text-sm mb-8" style={ani('calendar', 1).style}>June, 2026</p>
+        <div className="grid grid-cols-7 gap-4 text-sm text-stone-600 mb-8 font-light" style={ani('calendar', 2).style}>
           <div className="text-red-400">일</div><div>월</div><div>화</div><div>수</div><div>목</div><div>금</div><div>토</div>
           <div className="opacity-30">31</div>
           <div>1</div><div>2</div><div>3</div><div>4</div><div>5</div>
@@ -304,57 +458,173 @@ export default function App() {
           <div className="text-red-400">28</div><div>29</div><div>30</div>
           <div className="opacity-30">1</div><div className="opacity-30">2</div><div className="opacity-30">3</div><div className="opacity-30">4</div>
         </div>
-
-        <div className="bg-white py-4 px-6 rounded-full shadow-sm inline-block">
+        <div className="bg-white py-4 px-6 rounded-full shadow-sm inline-block" style={ani('calendar', 3).style}>
           <span className="text-stone-800 font-medium">예식일이 <span className="text-pink-600 font-bold">{calculateDday()}</span> 남았습니다</span>
         </div>
       </div>
     </section>
   );
 
-  const GallerySection = () => {
-    return (
-      <section className="py-16 bg-white">
-        <div className="text-center mb-10">
-          <h2 className="text-xl font-serif text-stone-700 tracking-widest mb-2">GALLERY</h2>
-          <p className="text-xs text-stone-400">사진을 클릭하시면 확대해서 보실 수 있습니다</p>
+  const aboutJSX = (
+    <section ref={aboutSectionRef} data-section="about" className="py-16 px-6 bg-white">
+      <div className="text-center mb-8" style={ani('about', 0).style}>
+        <h2 className="text-xl font-serif text-stone-700 tracking-widest mb-2">ABOUT US</h2>
+        <p className="text-sm text-stone-500">저희 커플을 소개합니다</p>
+      </div>
+      <div className="grid grid-cols-2 gap-4 mb-4" style={ani('about', 1).style}>
+        <div className="rounded-3xl overflow-hidden bg-stone-100 aspect-[3/4] relative">
+          <img src={aboutImages.groom} alt="신랑" className="w-full h-full object-cover" loading="lazy" decoding="async"
+            onError={(e) => { e.target.style.display = 'none'; const span = document.createElement('span'); span.className = 'absolute inset-0 flex items-center justify-center text-[11px] text-stone-400'; span.innerText = 'about_groom.jpg'; e.target.parentElement.appendChild(span); }} />
         </div>
-        
-        <div className="grid grid-cols-3 gap-1 px-1">
-          {images.map((img, idx) => (
-            <div 
-              key={img.id} 
-              className="aspect-[2/3] overflow-hidden cursor-pointer relative group bg-gray-100 border border-white"
-              onClick={() => openImage(idx)}
-            >
-              <img 
-              src={img.jpg} 
-                  alt={`${img.id + 1}번`}
-                  className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                  loading="eager"
-                  fetchPriority="high"
-                  decoding="async"
-              sizes="(max-width: 768px) 33vw, 200px"
-              onError={(e) => {
-                 e.target.style.display = 'none';
-                 const span = document.createElement('span');
-                 span.className = "absolute inset-0 flex items-center justify-center text-gray-400 text-[10px] text-center p-1 break-all";
-                 span.innerText = `photo_${img.id + 1}.jpg`;
-                 e.target.parentElement.appendChild(span);
+        <div className="rounded-3xl overflow-hidden bg-stone-100 aspect-[3/4] relative">
+          <img src={aboutImages.bride} alt="신부" className="w-full h-full object-cover" loading="lazy" decoding="async"
+            onError={(e) => { e.target.style.display = 'none'; const span = document.createElement('span'); span.className = 'absolute inset-0 flex items-center justify-center text-[11px] text-stone-400'; span.innerText = 'about_bride.jpg'; e.target.parentElement.appendChild(span); }} />
+        </div>
+      </div>
+      <div className="grid grid-cols-2 gap-4 mb-8 text-center" style={ani('about', 2).style}>
+        <p className="text-stone-700 text-lg"><span className="text-stone-500 mr-1">신랑</span>{weddingData.groom.name}</p>
+        <p className="text-stone-700 text-lg"><span className="text-stone-500 mr-1">신부</span>{weddingData.bride.name}</p>
+      </div>
+      <div className="mt-10 pt-2" style={ani('about', 3).style}>
+        <div className="text-center mb-8">
+          <h3 className="text-2xl font-serif text-stone-700 tracking-wide">TIMELINE</h3>
+        </div>
+        <div className="relative">
+          <div className="absolute left-1/2 top-0 h-full w-[2px] -translate-x-1/2 bg-stone-200"></div>
+          <div className="space-y-10">
+            {timelineItems.map((item, idx) => {
+              const isImageLeft = idx % 2 === 0;
+              return (
+                <div key={item.id} className="grid grid-cols-[1fr_24px_1fr] gap-3 items-center" style={ani('about', 4 + idx, 400 + idx * 1000).style}>
+                  {isImageLeft ? (
+                    <>
+                      <div className="rounded-2xl overflow-hidden bg-stone-100 aspect-[3/4] relative">
+                        <img src={item.image} alt={item.title} className="w-full h-full object-cover" loading="lazy" decoding="async"
+                          onError={(e) => { e.target.style.display = 'none'; const span = document.createElement('span'); span.className = 'absolute inset-0 flex items-center justify-center text-[11px] text-stone-400'; span.innerText = `timeline_${item.id}.jpg`; e.target.parentElement.appendChild(span); }} />
+                      </div>
+                      <div className="relative flex items-center justify-center h-full">
+                        <span className="w-3.5 h-3.5 rounded-full bg-stone-300 border-2 border-white z-10"></span>
+                      </div>
+                      <div className="text-left px-1">
+                        <h4 className={`text-[17px] leading-snug font-semibold text-stone-700 mb-2 break-keep ${item.id === 2 ? 'whitespace-nowrap text-[15px]' : ''}`}>{item.title}</h4>
+                        <p className="text-[14px] sm:text-sm text-stone-500 leading-5 tracking-[-0.02em] break-keep">{item.description}</p>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="text-right px-1">
+                        <h4 className={`text-[17px] leading-snug font-semibold text-stone-700 mb-2 break-keep ${item.id === 2 ? 'whitespace-nowrap text-[15px]' : ''}`}>{item.title}</h4>
+                        <p className="text-[14px] sm:text-sm text-stone-500 leading-5 tracking-[-0.02em] break-keep">{item.description}</p>
+                      </div>
+                      <div className="relative flex items-center justify-center h-full">
+                        <span className="w-3.5 h-3.5 rounded-full bg-stone-300 border-2 border-white z-10"></span>
+                      </div>
+                      <div className="rounded-2xl overflow-hidden bg-stone-100 aspect-[3/4] relative">
+                        <img src={item.image} alt={item.title} className="w-full h-full object-cover" loading="lazy" decoding="async"
+                          onError={(e) => { e.target.style.display = 'none'; const span = document.createElement('span'); span.className = 'absolute inset-0 flex items-center justify-center text-[11px] text-stone-400'; span.innerText = `timeline_${item.id}.jpg`; e.target.parentElement.appendChild(span); }} />
+                      </div>
+                    </>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+
+  const galleryJSX = (
+      <section ref={gallerySectionRef} data-section="gallery" className="py-16 bg-white">
+        <div className="text-center mb-8" style={ani('gallery', 0).style}>
+          <h2 className="text-xl font-serif text-stone-700 tracking-widest mb-2">GALLERY</h2>
+        </div>
+
+        {/* 상단 슬라이드 */}
+        <div
+          ref={galleryContainerRef}
+          className="relative bg-white overflow-hidden"
+          style={{ touchAction: 'pan-y', ...ani('gallery', 1).style }}
+        >
+          <div className="overflow-hidden w-full">
+            <div
+              className="flex will-change-transform"
+              style={{
+                gap: '12px',
+                transform: `translateX(${-gallerySlideIndex * (galleryContainerWidth + 12) + galleryDragOffset}px)`,
+                transition: galleryIsDragging ? 'none' : 'transform 300ms cubic-bezier(0.25, 1, 0.5, 1)',
               }}
-            />
+            >
+              {images.map((img) => (
+                <div
+                  key={img.id}
+                  className="flex-shrink-0 overflow-hidden flex items-center justify-center bg-white"
+                  style={{ width: galleryContainerWidth > 0 ? galleryContainerWidth + 'px' : '100%' }}
+                >
+                  <img
+                    src={img.jpg}
+                    alt={`${img.id + 1}번`}
+                    className="w-full"
+                    decoding="async"
+                    loading="eager"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* 화살표 버튼 */}
+          {images.length > 1 && (
+            <>
+              <button
+                className="absolute left-2 top-1/2 -translate-y-1/2 z-20 p-1"
+                onClick={handleGalleryPrev}
+                aria-label="이전"
+              >
+                <ChevronLeft size={28} className="text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]" />
+              </button>
+              <button
+                className="absolute right-2 top-1/2 -translate-y-1/2 z-20 p-1"
+                onClick={handleGalleryNext}
+                aria-label="다음"
+              >
+                <ChevronRight size={28} className="text-white drop-shadow-[0_1px_3px_rgba(0,0,0,0.5)]" />
+              </button>
+            </>
+          )}
+
+          {/* 페이지 인디케이터 */}
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-20 bg-black/40 text-white px-3 py-1 rounded-full text-xs backdrop-blur-sm">
+            {gallerySlideIndex + 1} / {images.length}
+          </div>
+        </div>
+
+        {/* 하단 썸네일 6칸 */}
+        <div className="grid grid-cols-6 gap-0.5 px-1 mt-4" style={ani('gallery', 2).style}>
+          {images.map((img, idx) => (
+            <div
+              key={img.id}
+              className={`aspect-square overflow-hidden cursor-pointer relative bg-gray-100 ${gallerySlideIndex === idx ? 'ring-2 ring-stone-400' : ''}`}
+              onClick={() => setGallerySlideIndex(idx)}
+            >
+              <img
+                src={img.jpg}
+                alt={`${img.id + 1}번`}
+                className="w-full h-full object-cover"
+                loading="lazy"
+                decoding="async"
+              />
             </div>
           ))}
         </div>
       </section>
-    );
-  };
+  );
 
-  const LocationSection = () => (
-    <section className="py-16 px-6 bg-stone-50 text-center">
-      <h2 className="text-xl font-serif text-stone-700 tracking-widest mb-8">LOCATION</h2>
+  const locationJSX = (
+    <section ref={locationSectionRef} data-section="location" className="py-16 px-6 bg-stone-50 text-center">
+      <h2 className="text-xl font-serif text-stone-700 tracking-widest mb-8" style={ani('location', 0).style}>LOCATION</h2>
       
-      <div className="bg-white p-6 rounded-lg shadow-sm max-w-md mx-auto">
+      <div className="bg-white p-6 rounded-lg shadow-sm max-w-md mx-auto" style={ani('location', 1).style}>
         <div className="font-bold text-lg text-stone-800 mb-1">{weddingData.location}</div>
         <div className="text-stone-500 text-sm mb-6">{weddingData.hall}</div>
         <div className="text-stone-500 text-sm mb-6">{weddingData.address}</div>
@@ -382,12 +652,12 @@ export default function App() {
           <button onClick={() => handleMapLink('naver')} className="flex-1 py-3 px-2 bg-[#03C75A] text-white text-xs sm:text-sm font-medium rounded hover:opacity-90 transition-opacity flex items-center justify-center gap-1 whitespace-nowrap">
             <Navigation size={14} className="flex-shrink-0" /> <span>네이버지도</span>
           </button>
-          <button onClick={() => handleMapLink('tmap')} className="flex-1 py-3 px-2 bg-gray-100 text-gray-700 text-xs sm:text-sm font-medium rounded hover:bg-gray-200 transition-colors flex items-center justify-center gap-1 whitespace-nowrap">
+          <button onClick={() => handleMapLink('tmap')} className="flex-1 py-3 px-2 bg-sky-400 text-white text-xs sm:text-sm font-medium rounded hover:bg-sky-500 transition-colors flex items-center justify-center gap-1 whitespace-nowrap">
             <Navigation size={14} className="flex-shrink-0" /> <span>티맵</span>
           </button>
         </div>
 
-        <div className="mt-8 text-left space-y-6 border-t border-stone-100 pt-6">
+        <div className="mt-8 text-left space-y-6 border-t border-stone-100 pt-6" style={ani('location', 2).style}>
           <div>
             <h4 className="font-bold text-stone-700 mb-3 flex items-center gap-2">
               <span className="w-1.5 h-1.5 bg-stone-400 rounded-full"></span>
@@ -434,75 +704,72 @@ export default function App() {
     </section>
   );
 
-  const AccountSection = () => {
-    const AccountGroup = ({ title, type }) => {
-      const isExpanded = activeAccordion === type;
-      const data = type === 'groom' ? weddingData.groom : weddingData.bride;
-      
-      return (
-        <div className="mb-4 bg-stone-50 rounded-lg overflow-hidden">
-          <button 
-            className="w-full flex items-center justify-between p-4 bg-white border border-stone-100"
-            onClick={() => setActiveAccordion(isExpanded ? null : type)}
-          >
-            <span className="font-medium text-stone-700">{title}</span>
-            {isExpanded ? <ChevronUp size={20} className="text-stone-400" /> : <ChevronDown size={20} className="text-stone-400" />}
-          </button>
-          
-          {isExpanded && (
-            <div className="p-4 space-y-4 text-sm">
-              <div className="flex justify-between items-center pb-2 border-b border-stone-200/50">
-                <div>
-                  <div className="text-xs text-stone-400 mb-1">{type === 'groom' ? '신랑' : '신부'}</div>
-                  <div className="text-stone-600 font-medium">{data.name}</div>
-                  <div className="text-stone-700">{data.bank}</div>
-                </div>
-                <button onClick={() => handleCopy(data.bank)} className="px-3 py-1.5 bg-white border border-stone-200 rounded text-xs text-stone-600 hover:bg-stone-50 flex items-center gap-1">
-                  <Copy size={12} /> 복사
-                </button>
-              </div>
-              <div className="flex justify-between items-center pb-2 border-b border-stone-200/50">
-                <div>
-                  <div className="text-xs text-stone-400 mb-1">혼주 (부)</div>
-                  <div className="text-stone-600 font-medium">{data.father}</div>
-                  <div className="text-stone-700">{data.fatherBank}</div>
-                </div>
-                <button onClick={() => handleCopy(data.fatherBank)} className="px-3 py-1.5 bg-white border border-stone-200 rounded text-xs text-stone-600 hover:bg-stone-50 flex items-center gap-1">
-                  <Copy size={12} /> 복사
-                </button>
-              </div>
-               <div className="flex justify-between items-center">
-                <div>
-                  <div className="text-xs text-stone-400 mb-1">혼주 (모)</div>
-                  <div className="text-stone-600 font-medium">{data.mother}</div>
-                  <div className="text-stone-700">{data.motherBank}</div>
-                </div>
-                <button onClick={() => handleCopy(data.motherBank)} className="px-3 py-1.5 bg-white border border-stone-200 rounded text-xs text-stone-600 hover:bg-stone-50 flex items-center gap-1">
-                  <Copy size={12} /> 복사
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      );
-    };
+  const renderAccountGroup = (title, type) => {
+    const isExpanded = activeAccordion === type;
+    const data = type === 'groom' ? weddingData.groom : weddingData.bride;
     return (
-      <section className="py-16 px-6 bg-white">
-         <div className="text-center mb-10">
-          <h2 className="text-xl font-serif text-stone-700 tracking-widest mb-2">마음 전하실 곳</h2>
-          <p className="text-xs text-stone-400">참석이 어려우신 분들을 위해 계좌번호를 기재하였습니다.</p>
-        </div>
-        <div className="max-w-md mx-auto">
-          <AccountGroup title="신랑측 계좌번호" type="groom" />
-          <AccountGroup title="신부측 계좌번호" type="bride" />
-        </div>
-      </section>
+      <div key={type} className="mb-4 bg-stone-50 rounded-lg overflow-hidden">
+        <button
+          className="w-full flex items-center justify-between p-4 bg-white border border-stone-100"
+          onClick={() => setActiveAccordion(isExpanded ? null : type)}
+        >
+          <span className="font-medium text-stone-700">{title}</span>
+          {isExpanded ? <ChevronUp size={20} className="text-stone-400" /> : <ChevronDown size={20} className="text-stone-400" />}
+        </button>
+        {isExpanded && (
+          <div className="p-4 space-y-4 text-sm">
+            <div className="flex justify-between items-center pb-2 border-b border-stone-200/50">
+              <div>
+                <div className="text-xs text-stone-400 mb-1">{type === 'groom' ? '신랑' : '신부'}</div>
+                <div className="text-stone-600 font-medium">{data.name}</div>
+                <div className="text-stone-700">{data.bank}</div>
+              </div>
+              <button onClick={() => handleCopy(data.bank)} className="px-3 py-1.5 bg-white border border-stone-200 rounded text-xs text-stone-600 hover:bg-stone-50 flex items-center gap-1">
+                <Copy size={12} /> 복사
+              </button>
+            </div>
+            <div className="flex justify-between items-center pb-2 border-b border-stone-200/50">
+              <div>
+                <div className="text-xs text-stone-400 mb-1">혼주 (부)</div>
+                <div className="text-stone-600 font-medium">{data.father}</div>
+                <div className="text-stone-700">{data.fatherBank}</div>
+              </div>
+              <button onClick={() => handleCopy(data.fatherBank)} className="px-3 py-1.5 bg-white border border-stone-200 rounded text-xs text-stone-600 hover:bg-stone-50 flex items-center gap-1">
+                <Copy size={12} /> 복사
+              </button>
+            </div>
+            <div className="flex justify-between items-center">
+              <div>
+                <div className="text-xs text-stone-400 mb-1">혼주 (모)</div>
+                <div className="text-stone-600 font-medium">{data.mother}</div>
+                <div className="text-stone-700">{data.motherBank}</div>
+              </div>
+              <button onClick={() => handleCopy(data.motherBank)} className="px-3 py-1.5 bg-white border border-stone-200 rounded text-xs text-stone-600 hover:bg-stone-50 flex items-center gap-1">
+                <Copy size={12} /> 복사
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
     );
   };
 
-  const FooterSection = () => (
-    <footer className="py-12 px-6 bg-stone-100 text-center">
-      <div className="flex justify-center gap-4 mb-8">
+  const accountJSX = (
+    <section ref={accountSectionRef} data-section="account" className="py-16 px-6 bg-white">
+      <div className="text-center mb-10" style={ani('account', 0).style}>
+        <h2 className="text-xl font-serif text-stone-700 tracking-widest mb-2">마음 전하실 곳</h2>
+        <p className="text-xs text-stone-400">참석이 어려우신 분들을 위해 계좌번호를 기재하였습니다.</p>
+      </div>
+      <div className="max-w-md mx-auto" style={ani('account', 1).style}>
+        {renderAccountGroup("신랑측 계좌번호", "groom")}
+        {renderAccountGroup("신부측 계좌번호", "bride")}
+      </div>
+    </section>
+  );
+
+  const footerJSX = (
+    <footer ref={footerSectionRef} data-section="footer" className="py-12 px-6 bg-stone-100 text-center">
+      <div className="flex justify-center gap-4 mb-8" style={ani('footer', 0).style}>
         <button 
           onClick={shareInvitation}
           className="w-12 h-12 bg-[#FAE100] rounded-full flex items-center justify-center shadow-sm hover:scale-105 transition-transform"
@@ -513,7 +780,7 @@ export default function App() {
           <Copy size={20} className="text-stone-600" />
         </button>
       </div>
-      <p className="text-xs text-stone-400">Copyright 2026. All rights reserved.</p>
+      <p className="text-xs text-stone-400" style={ani('footer', 1).style}>Copyright 2026. All rights reserved.</p>
     </footer>
   );
 
@@ -533,65 +800,25 @@ export default function App() {
         >
           {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
         </button>
-        <HeroSection />
-        <GreetingSection />
-        <CalendarSection />
-        <GallerySection />
-        <LocationSection />
-        <AccountSection />
-        <FooterSection />
-        {selectedIndex !== null && (
-          <div 
-            className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center" 
-            onClick={(e) => { if (e.target === e.currentTarget) closeImage(); }}
-          >
-            <button className="absolute top-4 right-4 text-white p-2 z-10" onClick={closeImage} aria-label="닫기">
-              <X size={32} />
-            </button>
-            
-            {/* 이미지 컨테이너 */}
-            <div className="relative w-full h-full flex items-center justify-center">
-              {/* 메인 사진 - 화면 가득 채우기 */}
-              <img 
-                key={selectedIndex}
-                src={images[selectedIndex].jpg} 
-                alt={`${selectedIndex + 1}번`} 
-                className="w-full h-full object-contain"
-                decoding="async"
-              />
-              
-              {/* 화살표 버튼 */}
-              {images.length > 1 && (
-                <>
-                  <button 
-                    className="absolute left-4 top-1/2 -translate-y-1/2 z-20 text-white p-2 bg-black/30 hover:bg-black/50 rounded-full backdrop-blur-sm transition-all" 
-                    onClick={handlePrev} 
-                    aria-label="이전"
-                  >
-                    <ChevronLeft size={24} />
-                  </button>
-                  <button 
-                    className="absolute right-4 top-1/2 -translate-y-1/2 z-20 text-white p-2 bg-black/30 hover:bg-black/50 rounded-full backdrop-blur-sm transition-all" 
-                    onClick={handleNext} 
-                    aria-label="다음"
-                  >
-                    <ChevronRight size={24} />
-                  </button>
-                </>
-              )}
-              
-              {/* 페이지 인디케이터 */}
-              <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 bg-black/50 text-white px-4 py-2 rounded-full text-sm backdrop-blur-sm">
-                {selectedIndex + 1} / {images.length}
-              </div>
-            </div>
+        {(showAudioNotice || isNoticeHiding) && (
+          <div className={`fixed top-4 left-1/2 z-40 -translate-x-1/2 bg-black/70 text-white px-4 py-2 rounded-full shadow-lg backdrop-blur-sm text-sm flex items-center gap-2 ${isNoticeHiding ? 'animate-slide-up' : 'animate-slide-down'}`}>
+            <span>배경음악이 있습니다</span>
+            <ChevronRight size={16} />
           </div>
         )}
+        <HeroSection />
+        {greetingJSX}
+        {calendarJSX}
+        {aboutJSX}
+        {galleryJSX}
+        {locationJSX}
+        {accountJSX}
+        {footerJSX}
         {isCopied && (
           <div className="fixed bottom-10 left-1/2 transform -translate-x-1/2 bg-black/80 text-white px-6 py-3 rounded-full text-sm z-50 animate-fade-in-up">복사되었습니다.</div>
         )}
       </div>
-      <style>{`.pb-safe { padding-bottom: env(safe-area-inset-bottom); } @keyframes fade-in-up { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } } .animate-fade-in-up { animation: fade-in-up 0.3s ease-out forwards; }`}</style>
+      <style>{`.pb-safe { padding-bottom: env(safe-area-inset-bottom); } @keyframes fade-in-up { from { opacity: 0; transform: translate(-50%, 10px); } to { opacity: 1; transform: translate(-50%, 0); } } .animate-fade-in-up { animation: fade-in-up 0.3s ease-out forwards; } @keyframes notice-slide-down { from { opacity: 0; transform: translate(-50%, -10px); } to { opacity: 1; transform: translate(-50%, 0); } } .animate-slide-down { animation: notice-slide-down 300ms ease-out forwards; } @keyframes notice-slide-up { from { opacity: 1; transform: translate(-50%, 0); } to { opacity: 0; transform: translate(-50%, -10px); } } .animate-slide-up { animation: notice-slide-up 260ms ease-in forwards; } @keyframes hero-fade-in { from { opacity: 0; } to { opacity: 1; } } .animate-hero-fade-in { animation: hero-fade-in 900ms ease-out forwards; }`}</style>
     </div>
   );
 }
