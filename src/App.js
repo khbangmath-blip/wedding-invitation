@@ -295,25 +295,46 @@ export default function App() {
 
   // 배경음악 제어
   useEffect(() => {
-    if (!audioRef.current) return;
-    if (isMuted) {
-      audioRef.current.pause();
-    } else {
-      audioRef.current.play().catch(err => {
-        console.log('음악 자동 재생 실패 (브라우저 정책):', err);
-      });
-    }
+    const syncAudioPlayback = () => {
+      if (!audioRef.current) return;
+      const isForeground = !document.hidden && document.hasFocus();
+
+      if (isMuted || !isForeground) {
+        audioRef.current.pause();
+      } else {
+        audioRef.current.play().catch(err => {
+          console.log('음악 자동 재생 실패 (브라우저 정책):', err);
+        });
+      }
+    };
+
+    syncAudioPlayback();
+    document.addEventListener('visibilitychange', syncAudioPlayback);
+    window.addEventListener('focus', syncAudioPlayback);
+    window.addEventListener('blur', syncAudioPlayback);
+
+    return () => {
+      document.removeEventListener('visibilitychange', syncAudioPlayback);
+      window.removeEventListener('focus', syncAudioPlayback);
+      window.removeEventListener('blur', syncAudioPlayback);
+    };
   }, [isMuted]);
 
   // 페이지 로드 후 자동으로 음악 재생 (브라우저 정책 우회)
   useEffect(() => {
     const playAudio = async () => {
       if (!audioRef.current) return;
+      const isForeground = !document.hidden && document.hasFocus();
+      if (!isForeground) return;
+
       audioRef.current.muted = true;
       try {
         await audioRef.current.play();
         // 약간의 지연 후 음소거 해제
         setTimeout(() => {
+          if (!audioRef.current) return;
+          const stillForeground = !document.hidden && document.hasFocus();
+          if (!stillForeground || audioRef.current.paused) return;
           audioRef.current.muted = false;
         }, 100);
       } catch (err) {
