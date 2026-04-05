@@ -109,26 +109,26 @@ export default function App() {
   const timelineItems = [
     {
       id: 1,
-      title: '봄날의 캠퍼스',
+      title: '2019년 봄날의 캠퍼스',
       description: '예쁘게 개나리가 핀 응용과학관에서 승환이는 경희를 졸졸 따라다녔습니다.',
       image: `${baseUrl}/images/timeline_1.jpg`,
     },
     {
       id: 2,
-      title: '서로의 든든한 버팀목',
-      description: '치열하게 임용고시를 준비할 때도, 군 복무로 떨어져 있을 때도 승환이와 경희는 서로의 가장 따뜻한 응원군이 되어주었습니다.',
+      title: '7년의 연애',
+      description: '승환이와 경희는 서로에게 가장 따뜻하고 든든한 버팀목이 되었습니다.',
       image: `${baseUrl}/images/timeline_2.jpg`,
     },
     {
       id: 3,
       title: '나란히 걷는 길',
-      description: '마침내 나란히 선생님이라는 꿈을 이룬 두 사람은, 알콩달콩 다정한 일상을 그려가고 있습니다.',
+      description: '나란히 꿈을 이룬 두 사람은, 알콩달콩 일상을 그려가고 있습니다.',
       image: `${baseUrl}/images/timeline_3.jpg`,
     },
     {
       id: 4,
-      title: '평생의 동반자',
-      description: '가장 빛나는 청춘을 함께한 승환이와 경희는 이제 두 손을 꼭 잡고 평생의 짝꿍이 되기로 약속했습니다.',
+      title: '2026년 6월 6일',
+      description: '승환이와 경희는 이제 평생의 짝꿍이 되기로 약속합니다.',
       image: `${baseUrl}/images/timeline_4.jpg`,
     },
   ];
