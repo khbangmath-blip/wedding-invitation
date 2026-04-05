@@ -297,7 +297,7 @@ export default function App() {
   useEffect(() => {
     const syncAudioPlayback = () => {
       if (!audioRef.current) return;
-      const isForeground = !document.hidden && document.hasFocus();
+      const isForeground = !document.hidden;
 
       if (isMuted || !isForeground) {
         audioRef.current.pause();
@@ -310,13 +310,9 @@ export default function App() {
 
     syncAudioPlayback();
     document.addEventListener('visibilitychange', syncAudioPlayback);
-    window.addEventListener('focus', syncAudioPlayback);
-    window.addEventListener('blur', syncAudioPlayback);
 
     return () => {
       document.removeEventListener('visibilitychange', syncAudioPlayback);
-      window.removeEventListener('focus', syncAudioPlayback);
-      window.removeEventListener('blur', syncAudioPlayback);
     };
   }, [isMuted]);
 
@@ -324,7 +320,7 @@ export default function App() {
   useEffect(() => {
     const playAudio = async () => {
       if (!audioRef.current) return;
-      const isForeground = !document.hidden && document.hasFocus();
+      const isForeground = !document.hidden;
       if (!isForeground) return;
 
       audioRef.current.muted = true;
@@ -333,7 +329,7 @@ export default function App() {
         // 약간의 지연 후 음소거 해제
         setTimeout(() => {
           if (!audioRef.current) return;
-          const stillForeground = !document.hidden && document.hasFocus();
+          const stillForeground = !document.hidden;
           if (!stillForeground || audioRef.current.paused) return;
           audioRef.current.muted = false;
         }, 100);
